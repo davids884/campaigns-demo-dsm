@@ -1,0 +1,59 @@
+pipeline {
+    agent {
+        node {
+            label 'dockerhost-build-server'
+        }
+    }
+    tools {
+        // Usa 'maven' si así se llama tu herramienta en Jenkins
+        maven 'maven'
+    }
+    environment {
+        // Esta es la "llave" que Jenkins buscará en su panel de credenciales
+        DOCKERHUB_CREDENTIALS = credentials('devops-dockerhub-token')
+    }
+    stages {
+        stage('Packaging') {
+            steps {
+                echo 'Packaging Backend..'
+                sh 'mvn clean package'
+            }
+        }
+        stage('Copying jar file') {
+            steps {
+                echo 'Copying jar file..'
+                // En el backend movemos el .jar
+                sh 'cp target/*.jar .'
+            }
+        }
+        stage('build image') {
+            steps {
+                echo 'Building backend image..'
+                sh 'docker build -t davids884/campaign-demo:v1 --label campaign-demo-server .'
+            }
+        }
+        stage('Docker Hub Login') {
+            steps {
+                echo 'Logging into Docker Hub..'
+                sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+            }
+        }
+        stage('Push to Docker Hub') {
+            steps {
+                echo 'Pushing backend to Docker Hub..'
+                sh 'docker push davids884/campaign-demo:v1'
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                try {
+                    sh 'docker logout'
+                } catch (Exception e) {
+                    echo "Sesión ya cerrada"
+                }
+            }
+        }
+    }
+}
