@@ -29,7 +29,7 @@ pipeline {
         stage('build image') {
             steps {
                 echo 'Building backend image..'
-                sh 'docker build -t davids884/campaign-demo:v1 --label campaign-demo-server .'
+                sh 'docker build -t dsanzmar/campaign-demo:v1 --label campaign-demo-server .'
             }
         }
         stage('Docker Hub Login') {
@@ -41,7 +41,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 echo 'Pushing backend to Docker Hub..'
-                sh 'docker push davids884/campaign-demo:v1'
+                sh 'docker push dsanzmar/campaign-demo:v1'
             }
         }
     }
